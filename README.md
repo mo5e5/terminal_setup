@@ -1,4 +1,4 @@
-# terminal-setup
+# terminal_setup
 
 A clean, opinionated macOS terminal setup for zsh — with useful shortcuts, git aliases, fun tools, and a random greeting on every start.
 
@@ -14,8 +14,8 @@ mo ~/projects/my-app %
 ## Install
 
 ```bash
-git clone https://github.com/mo5e5/terminal-setup.git
-cd terminal-setup
+git clone https://github.com/mo5e5/terminal_setup.git
+cd terminal_setup
 bash install.sh
 ```
 

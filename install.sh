@@ -1,14 +1,14 @@
 #!/bin/bash
 # ============================================================
-# Install script for terminal-setup
-# github.com/malteoppermann/terminal-setup
+# Install script for terminal_setup
+# github.com/malteoppermann/terminal_setup
 # ============================================================
 
 ZSHRC="$HOME/.zshrc"
 BACKUP="${ZSHRC}.backup_$(date +%Y%m%d_%H%M%S)"
 
 echo ""
-echo "  terminal-setup installer"
+echo "  terminal_setup installer"
 echo "  ────────────────────────"
 echo ""
 
