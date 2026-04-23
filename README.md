@@ -14,7 +14,7 @@ mo ~/projects/my-app %
 ## Install
 
 ```bash
-git clone https://github.com/malteoppermann/terminal-setup.git
+git clone https://github.com/mo5e5/terminal-setup.git
 cd terminal-setup
 bash install.sh
 ```

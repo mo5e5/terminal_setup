@@ -6,7 +6,7 @@ export NVM_DIR="$HOME/.nvm"
 
 # ============================================================
 # CUSTOM TERMINAL SETUP
-# github.com/malteoppermann/terminal-setup
+# github.com/mo5e5/terminal-setup
 # ============================================================
 
 # --- NAVIGATION ---
