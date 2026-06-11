@@ -1,13 +1,12 @@
-. "$HOME/.local/bin/env" 2>/dev/null || true
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-
 # ============================================================
 # CUSTOM TERMINAL SETUP
 # github.com/mo5e5/terminal_setup
 # ============================================================
+
+# --- WEATHER CITY ---
+# Set your city for 'wetter' and 'wetterdetail' commands.
+# Leave empty to use auto-location.
+TS_WEATHER_CITY=""
 
 # --- NAVIGATION ---
 alias ..='cd ..'
@@ -33,7 +32,13 @@ alias showsize='du -sh *'
 alias catn='cat -n'
 alias tailf='tail -f'
 alias tail20='tail -20'
-alias tree='find . -maxdepth 3 | sed -e "s/[^-][^\/]*\//  |/g" -e "s/|\([^ ]\)/|-\1/"'
+
+# tree: use real binary if available, otherwise find fallback
+if command -v tree &>/dev/null; then
+  alias tree='tree -L 3'
+else
+  alias tree='find . -maxdepth 3 | sed -e "s/[^-][^\/]*\//  |/g" -e "s/|\([^ ]\)/|-\1/"'
+fi
 
 mktxt()   { touch "$1.txt" && open -e "$1.txt"; }
 mkcd()    { mkdir -p "$1" && cd "$1"; }
@@ -61,7 +66,17 @@ alias top='top -o cpu'
 alias please='sudo'
 alias now='date +"%d.%m.%Y %H:%M:%S"'
 alias week='date +%V'
-alias pubkey='cat ~/.ssh/id_rsa.pub'
+
+# pubkey: ed25519 preferred, fallback to rsa, else hint
+pubkey() {
+  if [ -f ~/.ssh/id_ed25519.pub ]; then
+    cat ~/.ssh/id_ed25519.pub
+  elif [ -f ~/.ssh/id_rsa.pub ]; then
+    cat ~/.ssh/id_rsa.pub
+  else
+    echo "  ⚠️  No SSH key found. Generate with: ssh-keygen -t ed25519"
+  fi
+}
 
 # --- GIT ---
 alias gs='git status'
@@ -97,7 +112,6 @@ alias gds='git diff --staged'
 alias grs='git restore'
 alias grst='git restore --staged'
 alias gtag='git tag'
-alias gclean='git clean -fd'
 
 ginit() {
   git init && git add -A && git commit -m "Initial commit"
@@ -107,9 +121,47 @@ gpush() {
   git push --set-upstream origin "$(git branch --show-current)"
 }
 
+# gclean: preview untracked files, ask for confirmation, then delete
+gclean() {
+  local to_delete
+  to_delete=$(git clean -nd)
+
+  if [ -z "$to_delete" ]; then
+    echo "  No untracked files to remove."
+    return 0
+  fi
+
+  echo "  Files to be removed:"
+  echo "$to_delete"
+  echo ""
+  read -q "confirm?  Remove these files? (y/n) "
+  echo ""
+
+  if [ "$confirm" = "y" ]; then
+    git clean -fd
+    echo "  Done."
+  else
+    echo "  Aborted."
+  fi
+}
+
 # --- FUN ---
-alias wetter='curl -s "wttr.in/?lang=de&format=3"'           # change city as needed
-alias wetterdetail='curl -s "wttr.in/?lang=de"'
+wetter() {
+  local city_param=""
+  if [ -n "$TS_WEATHER_CITY" ]; then
+    city_param="~$TS_WEATHER_CITY"
+  fi
+  curl -s "wttr.in/${city_param}?lang=de&format=3"
+}
+
+wetterdetail() {
+  local city_param=""
+  if [ -n "$TS_WEATHER_CITY" ]; then
+    city_param="~$TS_WEATHER_CITY"
+  fi
+  curl -s "wttr.in/${city_param}?lang=de"
+}
+
 alias muenze='(( RANDOM % 2 )) && echo "  --> Heads!" || echo "  --> Tails!"'
 alias wuerfel='echo "  --> $((RANDOM % 6 + 1))"'
 alias genpassword='openssl rand -base64 20 | tr -d "=/+" | cut -c1-20'
@@ -132,11 +184,40 @@ notiz() {
 alias notizen='cat ~/Desktop/notizen.txt 2>/dev/null || echo "No notes yet."'
 
 # ============================================================
-# PROMPT  →  mo ~/path %
+# PROMPT  →  mo ~/path (branch) %
 # Change "mo" to your own initials
 # ============================================================
 autoload -Uz colors && colors 2>/dev/null
-PROMPT='%F{yellow}mo%f %F{cyan}%~%f %F{white}%%%f '
+
+# Git branch info via vcs_info
+autoload -Uz vcs_info 2>/dev/null
+precmd() {
+  vcs_info 2>/dev/null
+}
+zstyle ':vcs_info:*' enable git 2>/dev/null
+zstyle ':vcs_info:git:*' formats ' %F{8}(%b)%f' 2>/dev/null
+
+PROMPT='%F{yellow}mo%f %F{cyan}%~%f${vcs_info_msg_0_} %F{white}%%%f '
+
+# ============================================================
+# NVM LAZY-LOAD
+# ============================================================
+# Wrappers load NVM on first use, then remove themselves and re-dispatch.
+_load_nvm() {
+  unset -f nvm node npm npx _load_nvm 2>/dev/null
+  if [ -s "$HOME/.nvm/nvm.sh" ]; then
+    export NVM_DIR="$HOME/.nvm"
+    \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+  fi
+}
+
+if [ -d "$HOME/.nvm" ]; then
+  nvm()  { _load_nvm; nvm "$@"; }
+  node() { _load_nvm; command node "$@"; }
+  npm()  { _load_nvm; command npm "$@"; }
+  npx()  { _load_nvm; command npx "$@"; }
+fi
 
 # ============================================================
 # HELP TABLE
@@ -246,6 +327,7 @@ show_help() {
   _row "finder"     "Open folder in Finder"      "finder"
   _row "notiz"      "Save a desktop note"        "notiz \"idea xyz\""
   _row "notizen"    "Show all notes"             "notizen"
+  _row "pubkey"     "Show SSH public key"        "pubkey"
   _row "help"       "This overview"              "help"
   _sep
   printf "\n"

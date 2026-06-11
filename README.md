@@ -6,7 +6,7 @@ A clean, opinionated macOS terminal setup for zsh — with useful shortcuts, git
   Another day, another commit.
   Type 'help' for all shortcuts.
 
-mo ~/projects/my-app %
+mo ~/projects/my-app (main) %
 ```
 
 ---
@@ -21,7 +21,7 @@ bash install.sh
 
 Then open a new terminal window.
 
-> **Note:** The installer creates a backup of your existing `.zshrc` before overwriting it.
+> **Note:** The installer preserves your existing `.zshrc` and adds a source line to load `terminal_setup.zsh`. Your configuration stays intact.
 
 ---
 
@@ -100,21 +100,22 @@ Type `help` at any time to see the full shortcut table:
 
 ## Customization
 
-Open `~/.zshrc` in any editor:
+Edit `~/.terminal_setup.zsh` in any editor:
 
 ```bash
-open ~/.zshrc
+open ~/.terminal_setup.zsh
 ```
 
 **Change your prompt initials** — find this line and replace `mo`:
 ```bash
-PROMPT='%F{yellow}mo%f %F{cyan}%~%f %F{white}%%%f '
+PROMPT='%F{yellow}mo%f %F{cyan}%~%f${vcs_info_msg_0_} %F{white}%%%f '
 ```
 
-**Change weather location** — find this line and replace the city:
+**Change weather location** — set this variable near the top of the file:
 ```bash
-alias wetter='curl -s "wttr.in/Berlin?lang=de&format=3"'
+TS_WEATHER_CITY="Berlin"
 ```
+Leave it empty to use auto-location.
 
 **Add your own greetings** — find the `MSGS` array in `_greet()` and add lines:
 ```bash
